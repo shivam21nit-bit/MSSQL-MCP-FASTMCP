@@ -1,0 +1,28 @@
+{
+  "name": "sql_mcp_tool",
+  "description": "Tool for querying SQL Server metadata via structured FastAPI endpoints.",
+  "entrypoint": "final_mcp:app",
+  "language": "python",
+  "tools": [
+    {
+      "tool": "get_column_data",
+      "description": "Fetch data from a column with a WHERE filter"
+    },
+    {
+      "tool": "get_column_population_logic",
+      "description": "Procedures that populate a specific column"
+    },
+    {
+      "tool": "get_table_schema",
+      "description": "Get column names and data types of a table"
+    },
+    {
+      "tool": "get_object_definition",
+      "description": "Fetch SQL definition of a view or stored procedure"
+    },
+    {
+      "tool": "get_job_status",
+      "description": "Get status and history of a SQL Agent job"
+    }
+  ]
+}
