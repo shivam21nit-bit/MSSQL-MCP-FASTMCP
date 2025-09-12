@@ -1,4 +1,3 @@
-
 # SQL MCP Tool
 
 A FastAPI-based **MCP-compliant** tool for querying Microsoft SQL Server metadata. This tool is intended to be run by an agent within a Model Context Protocol (MCP) environment and responds to structured tool-use queries.
