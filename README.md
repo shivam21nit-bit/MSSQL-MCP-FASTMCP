@@ -1,133 +1,162 @@
-## 📘 **SQL MCP Tool — README for Agents**
+# SQL MCP Tool
 
-### ✅ **Overview**
-
-This is an MCP-compliant tool that allows querying SQL Server metadata using structured API requests. The tool provides multiple endpoints to fetch information such as table schemas, column data, object definitions, and job statuses. The tool uses a read-only database connection and relies on cached metadata to serve requests efficiently.
-
----
-
-### ⚙ **Setup Instructions**
-
-1. **Database Connection**
-   The tool connects to a SQL Server instance using the following read-only credentials:
-
-   ```python
-   DB_CONFIG = {
-       'server': '8RBQW14-PC',
-       'database': 'TestDatabase',
-       'username': 'readonly_agent',
-       'password': 'Phenom@21',
-       'driver': '{ODBC Driver 17 for SQL Server}',
-   }
-   ```
-
-   ➤ Ensure that the `readonly_agent` account has permissions only for SELECT operations.
-
-2. **Schema Cache**
-   Upon startup, the tool loads metadata from the database into memory, including:
-
-   * Tables and their columns
-   * Procedures and views
-   * SQL Agent jobs
+A **FastAPI-based metadata querying tool** that conforms to the [GitMCP](https://gitmcp.io) standard.  
+This tool exposes APIs for interacting with SQL Server metadata such as table schemas, column data, job statuses, and object definitions.
 
 ---
 
-### 🚀 **Available Endpoints**
+## 🧰 Tool Description
 
-### 📥 **1. `/v1/tool-use` (POST)**
+This repository provides a server that supports structured metadata queries against a SQL Server database.  
+It is designed to be easily integrated with large language model (LLM) agents using the [GitMCP Tool Use Protocol](https://github.com/microsoft/gitmcp).
 
-Use this endpoint to execute one of the available tools by providing its name and parameters.
+---
 
-**Request Body Example:**
+## 🚀 Available Endpoints
 
+### `POST /v1/tool-use`
+
+Trigger execution of any supported tool by specifying the `tool` name and required `parameters`.
+
+### `GET /v1/metadata`
+
+Returns metadata about all available tools and expected input parameters.
+
+---
+
+## 🛠️ Tools
+
+### 1. `get_column_data`
+
+**Description**: Fetch data from a specific column with a `WHERE` filter.
+
+**Parameters**:
 ```json
 {
-  "tool": "get_column_data",
-  "parameters": {
-    "table": "Employees",
-    "select_col": "Name",
-    "where_col": "DepartmentID",
-    "value": "3"
-  }
+  "table": "Name of the table",
+  "select_col": "Column to select",
+  "where_col": "Column to filter on",
+  "value": "Value for the filter"
 }
-```
-
-#### ✅ Tools Available:
-
-1. **get\_column\_data**
-   Fetch records from a specific column filtered by a WHERE condition.
-
-2. **get\_column\_population\_logic**
-   Retrieve procedures that populate a given column via INSERT or UPDATE statements.
-
-3. **get\_table\_schema**
-   Get the column names and data types for a specific table.
-
-4. **get\_object\_definition**
-   Retrieve the definition of a stored procedure or view.
-
-5. **get\_job\_status**
-   Get the latest run status of a SQL Agent job.
+````
 
 ---
 
-### 📦 **2. `/v1/metadata` (GET)**
+### 2. `get_column_population_logic`
 
-Returns details about the tool and its available operations.
+**Description**: Returns stored procedures that populate the specified column (via INSERT or UPDATE).
 
-**Response Example:**
+**Parameters**:
 
 ```json
 {
-  "name": "sql_mcp_tool",
-  "description": "Tool for querying SQL Server metadata using structured parameters.",
-  "tools": [
-    {
-      "tool": "get_column_data",
-      "description": "Fetch data from a specific column with a WHERE condition.",
-      "parameters": { "table": "...", "select_col": "...", "where_col": "...", "value": "..." }
-    },
-    ...
-  ]
+  "column": "Name of the column"
 }
 ```
 
 ---
 
-### ✅ **Usage Notes for Agents**
+### 3. `get_table_schema`
 
-* All requests should be sent as JSON.
-* Use the `/v1/metadata` endpoint to discover available tools and required parameters.
-* The tool only supports queries that retrieve information. No insert, update, or delete operations are allowed through this interface.
-* Table, column, object, and job names are case-insensitive but should be validated against cached metadata.
-* All errors are communicated with proper HTTP status codes:
+**Description**: Returns column names and data types of the specified table.
 
-  * `400` for missing or invalid parameters
-  * `404` for objects not found
-  * `500` for server or connection errors
+**Parameters**:
 
----
-
-### 🔑 **Security Considerations**
-
-* The tool uses a read-only database account.
-* All operations are restricted to queries with no modification rights.
-* Access logs are captured for debugging and monitoring.
-
----
-
-### 📂 **Directory Structure**
-
-```
-/
-├── final_mcp.py               # FastAPI application and endpoints
-├── requirements.txt      # Python dependencies
-├── README.md             # This guide for agents
+```json
+{
+  "table": "Name of the table"
+}
 ```
 
 ---
 
-### 📬 **Contact**
+### 4. `get_object_definition`
 
-For assistance or further details, reach out to the system administrator or database team managing the SQL Server instance.
+**Description**: Returns SQL definition (source code) of a stored procedure or view.
 
+**Parameters**:
+
+```json
+{
+  "object": "Name of the object"
+}
+```
+
+---
+
+### 5. `get_job_status`
+
+**Description**: Returns last known run status of a SQL Server Agent job.
+
+**Parameters**:
+
+```json
+{
+  "job": "Name of the job"
+}
+```
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/<your-username>/<your-repo>.git
+cd <your-repo>
+```
+
+### 2. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+> ⚠️ Ensure you have `ODBC Driver 17 for SQL Server` installed.
+
+### 3. Run the Server
+
+```bash
+uvicorn main:app --reload
+```
+
+* By default, server runs at:
+  **[http://localhost:8000](http://localhost:8000)**
+* Swagger UI available at:
+  **[http://localhost:8000/docs](http://localhost:8000/docs)**
+
+---
+
+## 🤖 GitMCP Compatibility
+
+This repository is compatible with [GitMCP](https://gitmcp.io), enabling LLMs to discover and use tools via:
+
+```
+GET https://gitmcp.io/<your-username>/<your-repo>/v1/metadata
+POST https://gitmcp.io/<your-username>/<your-repo>/v1/tool-use
+```
+
+Ensure the following:
+
+* `README.md` and `llms.txt` are in the **root** directory.
+* Server supports `/v1/metadata` and `/v1/tool-use` endpoints.
+
+---
+
+## 📂 Example `llms.txt` (include in root of repo)
+
+```
+/v1/metadata
+/v1/tool-use
+```
+
+---
+
+## 📌 Requirements
+
+* Python 3.8+
+* FastAPI
+* pyodbc
+* Uvicorn
+* SQL Server ODBC Driver
