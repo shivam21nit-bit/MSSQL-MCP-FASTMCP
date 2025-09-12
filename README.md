@@ -1,109 +1,135 @@
-# SQL MCP Tool
+## 📘 **SQL MCP Tool — README for Agents**
 
-A FastAPI-based **MCP-compliant** tool for querying Microsoft SQL Server metadata. This tool is intended to be run by an agent within a Model Context Protocol (MCP) environment and responds to structured tool-use queries.
+### ✅ **Overview**
 
----
-
-## 🚀 Features
-
-- 🔍 Fetch column data with WHERE filters
-- 📊 Retrieve full table schema (columns + types)
-- 🧠 Discover stored procedures that populate a specific column
-- 📄 View SQL definition of objects (stored procedures / views)
-- 🕒 Get last run status of SQL Server Agent jobs
+This is an MCP-compliant tool that allows querying SQL Server metadata using structured API requests. The tool provides multiple endpoints to fetch information such as table schemas, column data, object definitions, and job statuses. The tool uses a read-only database connection and relies on cached metadata to serve requests efficiently.
 
 ---
 
-## 🧰 Endpoints
+### ⚙ **Setup Instructions**
 
-### `POST /v1/tool-use`
+1. **Database Connection**
+   The tool connects to a SQL Server instance using the following read-only credentials:
 
-Use this endpoint to trigger any of the supported tools.
+   ```python
+   DB_CONFIG = {
+       'server': '8RBQW14-PC',
+       'database': 'TestDatabase',
+       'username': 'readonly_agent',
+       'password': 'Phenom@21',
+       'driver': '{ODBC Driver 17 for SQL Server}',
+   }
+   ```
 
-#### Example Request:
+   ➤ Ensure that the `readonly_agent` account has permissions only for SELECT operations.
+
+2. **Schema Cache**
+   Upon startup, the tool loads metadata from the database into memory, including:
+
+   * Tables and their columns
+   * Procedures and views
+   * SQL Agent jobs
+
+---
+
+### 🚀 **Available Endpoints**
+
+### 📥 **1. `/v1/tool-use` (POST)**
+
+Use this endpoint to execute one of the available tools by providing its name and parameters.
+
+**Request Body Example:**
 
 ```json
 {
-  "tool": "get_table_schema",
+  "tool": "get_column_data",
   "parameters": {
-    "table": "Customers"
+    "table": "Employees",
+    "select_col": "Name",
+    "where_col": "DepartmentID",
+    "value": "3"
   }
 }
+```
 
-Tools Supported:
-Tool Name	Description
-get_column_data	Fetch values from a column with a WHERE filter
-get_column_population_logic	Find procedures that populate a given column
-get_table_schema	Retrieve column names and data types for a table
-get_object_definition	Get SQL definition of a view or stored procedure
-get_job_status	Get the last execution status of a SQL Server Agent job
-GET /v1/metadata
+#### ✅ Tools Available:
 
-Returns tool metadata in a format compatible with MCP registries.
+1. **get\_column\_data**
+   Fetch records from a specific column filtered by a WHERE condition.
 
-🛠️ Running Locally
-🔧 1. Install Dependencies
-pip install -r requirements.txt
+2. **get\_column\_population\_logic**
+   Retrieve procedures that populate a given column via INSERT or UPDATE statements.
 
-▶️ 2. Start the API Server
-uvicorn final_mcp:app --host 0.0.0.0 --port 8000 --reload
+3. **get\_table\_schema**
+   Get the column names and data types for a specific table.
 
-⚙️ Configuration
+4. **get\_object\_definition**
+   Retrieve the definition of a stored procedure or view.
 
-Update the DB_CONFIG dictionary inside final_mcp.py with your SQL Server details:
+5. **get\_job\_status**
+   Get the latest run status of a SQL Agent job.
 
-DB_CONFIG = {
-    'server': 'YOUR_SERVER',
-    'database': 'YOUR_DATABASE',
-    'username': 'YOUR_USERNAME',
-    'password': 'YOUR_PASSWORD',
-    'driver': '{ODBC Driver 17 for SQL Server}',
+---
+
+### 📦 **2. `/v1/metadata` (GET)**
+
+Returns details about the tool and its available operations.
+
+**Response Example:**
+
+```json
+{
+  "name": "sql_mcp_tool",
+  "description": "Tool for querying SQL Server metadata using structured parameters.",
+  "tools": [
+    {
+      "tool": "get_column_data",
+      "description": "Fetch data from a specific column with a WHERE condition.",
+      "parameters": { "table": "...", "select_col": "...", "where_col": "...", "value": "..." }
+    },
+    ...
+  ]
 }
+```
 
+---
 
-✅ Note: For security, consider moving credentials to a .env file in production.
+### ✅ **Usage Notes for Agents**
 
-📁 Project Structure
-Sql_Server_McpServer/
-├── final_mcp.py           # Main FastAPI application
-├── requirements.txt       # Dependencies
-├── README.md              # This file
-├── .gitignore             # Git ignore rules
-└── mcp_metadata.json      # MCP-compatible tool metadata
+* All requests should be sent as JSON.
+* Use the `/v1/metadata` endpoint to discover available tools and required parameters.
+* The tool only supports queries that retrieve information. No insert, update, or delete operations are allowed through this interface.
+* Table, column, object, and job names are case-insensitive but should be validated against cached metadata.
+* All errors are communicated with proper HTTP status codes:
 
-✅ MCP Compliance Notes
+  * `400` for missing or invalid parameters
+  * `404` for objects not found
+  * `500` for server or connection errors
 
-The tool is compatible with MCP Git-based tool runners.
+---
 
-It exposes:
+### 🔑 **Security Considerations**
 
-/v1/tool-use: Accepts tool+parameters and returns results
+* The tool uses a read-only database account.
+* All operations are restricted to queries with no modification rights.
+* Access logs are captured for debugging and monitoring.
 
-/v1/metadata: Describes the tool’s capabilities and parameters
+---
 
-Ensure the repository is accessible to your MCP agent.
+### 📂 **Directory Structure**
 
-🔒 Security
+```
+/
+├── final_mcp.py               # FastAPI application and endpoints
+├── requirements.txt      # Python dependencies
+├── README.md             # This guide for agents
+```
 
-❗ Never hardcode production credentials.
+---
 
-Use environment variables or secret managers where possible.
+### 📬 **Contact**
 
-Consider using python-dotenv or FastAPI's Settings class for config management.
+For assistance or further details, reach out to the system administrator or database team managing the SQL Server instance.
 
-🧪 Testing
+---
 
-You can test locally using tools like Postman or cURL:
-
-curl -X POST http://localhost:8000/v1/tool-use \
-     -H "Content-Type: application/json" \
-     -d '{
-           "tool": "get_table_schema",
-           "parameters": {
-               "table": "Customers"
-           }
-         }'
-
-🧑‍💻 Author
-
-Built by [Shivam Mishra], 2025. Intended for MCP environments and enterprise SQL auditing tools.
