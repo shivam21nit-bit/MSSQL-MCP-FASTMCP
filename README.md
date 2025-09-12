@@ -1,162 +1,183 @@
+Great — since your `llms.txt` now correctly points to:
+
+```
+https://raw.githubusercontent.com/shivam21nit-bit/Sql-Server-MCP/main/README.md
+```
+
+I'll now generate a clean and GitMCP-compatible `README.md` for your project based on your `final_mcp.py` script.
+
+---
+
+## ✅ `README.md` (Markdown Format)
+
+````markdown
 # SQL MCP Tool
 
-A **FastAPI-based metadata querying tool** that conforms to the [GitMCP](https://gitmcp.io) standard.  
-This tool exposes APIs for interacting with SQL Server metadata such as table schemas, column data, job statuses, and object definitions.
+**Version:** 1.1.0  
+**Author:** [shivam21nit-bit](https://github.com/shivam21nit-bit)  
+**Description:** A FastAPI-based MCP-compliant server for querying SQL Server metadata.
 
 ---
 
-## 🧰 Tool Description
+## 🧩 Overview
 
-This repository provides a server that supports structured metadata queries against a SQL Server database.  
-It is designed to be easily integrated with large language model (LLM) agents using the [GitMCP Tool Use Protocol](https://github.com/microsoft/gitmcp).
+This project implements a [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol) server to expose structured metadata from a SQL Server instance using a set of well-defined tools.
+
+It supports use cases such as:
+- Inspecting table schemas
+- Checking job statuses
+- Retrieving stored procedure definitions
+- Exploring column population logic
 
 ---
 
-## 🚀 Available Endpoints
+## 🚀 Endpoints
 
 ### `POST /v1/tool-use`
 
-Trigger execution of any supported tool by specifying the `tool` name and required `parameters`.
+Use this endpoint to run one of the supported tools.
 
-### `GET /v1/metadata`
+#### Request Format:
 
-Returns metadata about all available tools and expected input parameters.
-
----
-
-## 🛠️ Tools
-
-### 1. `get_column_data`
-
-**Description**: Fetch data from a specific column with a `WHERE` filter.
-
-**Parameters**:
 ```json
 {
-  "table": "Name of the table",
-  "select_col": "Column to select",
-  "where_col": "Column to filter on",
-  "value": "Value for the filter"
+  "tool": "tool_name",
+  "parameters": {
+    "key": "value"
+  }
 }
 ````
 
 ---
 
+## 🔧 Supported Tools
+
+### 1. `get_column_data`
+
+Fetch data from a column using a `WHERE` condition.
+
+**Parameters:**
+
+* `table`: Name of the table
+* `select_col`: Column to select
+* `where_col`: Column to filter on
+* `value`: Value for the filter
+
+---
+
 ### 2. `get_column_population_logic`
 
-**Description**: Returns stored procedures that populate the specified column (via INSERT or UPDATE).
+Find stored procedures that update or insert into a given column.
 
-**Parameters**:
+**Parameters:**
 
-```json
-{
-  "column": "Name of the column"
-}
-```
+* `column`: Name of the column
 
 ---
 
 ### 3. `get_table_schema`
 
-**Description**: Returns column names and data types of the specified table.
+Return all columns and data types of a table.
 
-**Parameters**:
+**Parameters:**
 
-```json
-{
-  "table": "Name of the table"
-}
-```
+* `table`: Name of the table
 
 ---
 
 ### 4. `get_object_definition`
 
-**Description**: Returns SQL definition (source code) of a stored procedure or view.
+Fetch the SQL definition of a stored procedure or view.
 
-**Parameters**:
+**Parameters:**
 
-```json
-{
-  "object": "Name of the object"
-}
-```
+* `object`: Name of the object
 
 ---
 
 ### 5. `get_job_status`
 
-**Description**: Returns last known run status of a SQL Server Agent job.
+Get the last run status of a SQL Server Agent job.
 
-**Parameters**:
+**Parameters:**
 
-```json
-{
-  "job": "Name of the job"
-}
+* `job`: Name of the job
+
+---
+
+## 🗂️ Metadata Endpoint
+
+### `GET /v1/metadata`
+
+Returns structured metadata about the tools exposed by this server.
+
+---
+
+## ♻️ Refresh Schema Cache
+
+### `POST /v1/refresh-schema`
+
+Rebuilds the in-memory cache of tables, columns, jobs, and objects.
+
+---
+
+## 📦 Environment Variables
+
+You should create a `.env` file in the root directory with the following:
+
+```env
+DB_SERVER=your_sql_server
+DB_NAME=your_database_name
+DB_USER=readonly_user
+DB_PASS=your_password
 ```
 
 ---
 
-## ⚙️ Setup Instructions
-
-### 1. Clone the Repository
+## 📥 Installation & Setup
 
 ```bash
-git clone https://github.com/<your-username>/<your-repo>.git
-cd <your-repo>
-```
+# Clone the repo
+git clone https://github.com/shivam21nit-bit/Sql-Server-MCP.git
+cd Sql-Server-MCP
 
-### 2. Install Dependencies
+# Create virtual environment (optional)
+python -m venv venv
+source venv/bin/activate   # or .\venv\Scripts\activate on Windows
 
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-> ⚠️ Ensure you have `ODBC Driver 17 for SQL Server` installed.
-
-### 3. Run the Server
-
-```bash
-uvicorn main:app --reload
-```
-
-* By default, server runs at:
-  **[http://localhost:8000](http://localhost:8000)**
-* Swagger UI available at:
-  **[http://localhost:8000/docs](http://localhost:8000/docs)**
-
----
-
-## 🤖 GitMCP Compatibility
-
-This repository is compatible with [GitMCP](https://gitmcp.io), enabling LLMs to discover and use tools via:
-
-```
-GET https://gitmcp.io/<your-username>/<your-repo>/v1/metadata
-POST https://gitmcp.io/<your-username>/<your-repo>/v1/tool-use
-```
-
-Ensure the following:
-
-* `README.md` and `llms.txt` are in the **root** directory.
-* Server supports `/v1/metadata` and `/v1/tool-use` endpoints.
-
----
-
-## 📂 Example `llms.txt` (include in root of repo)
-
-```
-/v1/metadata
-/v1/tool-use
+# Start the server
+uvicorn final_mcp:app --reload
 ```
 
 ---
 
-## 📌 Requirements
+## 📝 Requirements
 
-* Python 3.8+
-* FastAPI
+The dependencies are listed in `requirements.txt` and include:
+
+* fastapi
+* uvicorn
 * pyodbc
-* Uvicorn
-* SQL Server ODBC Driver
+* python-dotenv
+* pydantic
+
+---
+
+## 🧠 llms.txt
+
+This repository includes a `llms.txt` pointing to the raw `README.md` file so that GitMCP can discover the tool documentation.
+
+```
+https://raw.githubusercontent.com/shivam21nit-bit/Sql-Server-MCP/main/README.md
+```
+
+---
+
+## 📄 License
+
+MIT License © 2025 shivam21nit-bit
+
+```
