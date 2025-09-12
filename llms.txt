@@ -1,0 +1,35 @@
+name: sql_mcp_tool
+description: Tool for querying SQL Server metadata using structured parameters.
+
+entry_file: final_mcp.py
+entry_endpoint: /v1/tool-use
+metadata_endpoint: /v1/metadata
+
+tools:
+  - tool: get_table_schema
+    description: Get schema of a table
+    parameters:
+      table: Name of the table
+
+  - tool: get_column_data
+    description: Fetch a column’s data with a WHERE clause
+    parameters:
+      table: Name of the table
+      select_col: Column to select
+      where_col: Column to filter on
+      value: Value for the filter
+
+  - tool: get_column_population_logic
+    description: Stored procedures that insert/update a specific column
+    parameters:
+      column: Name of the column
+
+  - tool: get_object_definition
+    description: SQL definition for a view or stored procedure
+    parameters:
+      object: Name of the object
+
+  - tool: get_job_status
+    description: Last run status of a SQL Server Agent job
+    parameters:
+      job: Name of the job
