@@ -131,5 +131,3 @@ Returns details about the tool and its available operations.
 
 For assistance or further details, reach out to the system administrator or database team managing the SQL Server instance.
 
----
-
