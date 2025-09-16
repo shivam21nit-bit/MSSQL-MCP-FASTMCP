@@ -1,2 +1,17 @@
 https://raw.githubusercontent.com/shivam21nit-bit/Sql-Server-MCP/main/README.md
-https://camp-pretty-kick-mines.trycloudflare.com/v1/metadata
+https://pockets-adopt-either-permitted.trycloudflare.com/v1/metadata
+# Usage Notes:
+- Use the metadata endpoint to retrieve available tools and their descriptions.
+- Each request to /v1/tool-use must be a POST with JSON structured as:
+{
+  "tool": "<tool_name>",
+  "parameters": { ... }
+}
+- Example:
+{
+  "tool": "get_table_schema",
+  "parameters": {
+    "table": "Employees"
+  }
+}
+- Ensure you pass all required parameters as defined in the metadata.
