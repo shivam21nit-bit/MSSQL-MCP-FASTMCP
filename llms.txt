@@ -1,5 +1,5 @@
 https://raw.githubusercontent.com/shivam21nit-bit/Sql-Server-MCP/main/README.md
-https://pockets-adopt-either-permitted.trycloudflare.com/v1/metadata
+https://restore-supporters-vast-written.trycloudflare.com/v1/metadata
 # Usage Notes:
 - Use the metadata endpoint to retrieve available tools and their descriptions.
 - Each request to /v1/tool-use must be a POST with JSON structured as:
