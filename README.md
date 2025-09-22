@@ -1,183 +1,130 @@
-Great — since your `llms.txt` now correctly points to:
-
-```
-https://raw.githubusercontent.com/shivam21nit-bit/Sql-Server-MCP/main/README.md
-```
-
-I'll now generate a clean and GitMCP-compatible `README.md` for your project based on your `final_mcp.py` script.
+# SQL MCP Tool — FastMCP v2.x Compatible
+# Main Code in Server.py
+Expose SQL Server metadata and utilities via [FastMCP](https://pypi.org/project/fastmcp/).  
+This tool provides quick access to SQL Server schema, jobs, and object definitions for agents or copilots that support the MCP protocol.
 
 ---
 
-## ✅ `README.md` (Markdown Format)
+## ✨ Features
 
-````markdown
-# SQL MCP Tool
-
-**Version:** 1.1.0  
-**Author:** [shivam21nit-bit](https://github.com/shivam21nit-bit)  
-**Description:** A FastAPI-based MCP-compliant server for querying SQL Server metadata.
-
----
-
-## 🧩 Overview
-
-This project implements a [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol) server to expose structured metadata from a SQL Server instance using a set of well-defined tools.
-
-It supports use cases such as:
-- Inspecting table schemas
-- Checking job statuses
-- Retrieving stored procedure definitions
-- Exploring column population logic
+- **Metadata Introspection**
+  - List tables, columns, and objects from SQL Server
+  - Retrieve table schema and column definitions
+- **Data Exploration**
+  - Fetch sample values from a given column with filters
+- **Lineage & Logic**
+  - Discover which stored procedures populate/update a column
+- **Object Inspection**
+  - Get full T-SQL definition of stored procedures, views, or functions
+- **SQL Agent Integration**
+  - Check job status and execution history
+- **Resources**
+  - Markdown lists of tables and jobs (`sql://tables`, `sql://jobs`)
 
 ---
 
-## 🚀 Endpoints
-
-### `POST /v1/tool-use`
-
-Use this endpoint to run one of the supported tools.
-
-#### Request Format:
-
-```json
-{
-  "tool": "tool_name",
-  "parameters": {
-    "key": "value"
-  }
-}
-````
-
----
-
-## 🔧 Supported Tools
-
-### 1. `get_column_data`
-
-Fetch data from a column using a `WHERE` condition.
-
-**Parameters:**
-
-* `table`: Name of the table
-* `select_col`: Column to select
-* `where_col`: Column to filter on
-* `value`: Value for the filter
-
----
-
-### 2. `get_column_population_logic`
-
-Find stored procedures that update or insert into a given column.
-
-**Parameters:**
-
-* `column`: Name of the column
-
----
-
-### 3. `get_table_schema`
-
-Return all columns and data types of a table.
-
-**Parameters:**
-
-* `table`: Name of the table
-
----
-
-### 4. `get_object_definition`
-
-Fetch the SQL definition of a stored procedure or view.
-
-**Parameters:**
-
-* `object`: Name of the object
-
----
-
-### 5. `get_job_status`
-
-Get the last run status of a SQL Server Agent job.
-
-**Parameters:**
-
-* `job`: Name of the job
-
----
-
-## 🗂️ Metadata Endpoint
-
-### `GET /v1/metadata`
-
-Returns structured metadata about the tools exposed by this server.
-
----
-
-## ♻️ Refresh Schema Cache
-
-### `POST /v1/refresh-schema`
-
-Rebuilds the in-memory cache of tables, columns, jobs, and objects.
-
----
-
-## 📦 Environment Variables
-
-You should create a `.env` file in the root directory with the following:
-
-```env
-DB_SERVER=your_sql_server
-DB_NAME=your_database_name
-DB_USER=readonly_user
-DB_PASS=your_password
-```
-
----
-
-## 📥 Installation & Setup
+## 🛠 Requirements
 
 ```bash
-# Clone the repo
-git clone https://github.com/shivam21nit-bit/Sql-Server-MCP.git
-cd Sql-Server-MCP
+pip install fastmcp python-dotenv pyodbc
+# optional: for tunneling
+pip install cloudflared
+SQL Server ODBC Driver: Ensure ODBC Driver 17 for SQL Server (or newer) is installed on your system.
 
-# Create virtual environment (optional)
-python -m venv venv
-source venv/bin/activate   # or .\venv\Scripts\activate on Windows
+⚙️ Configuration
+Set up environment variables in a .env file:
 
-# Install dependencies
-pip install -r requirements.txt
+ini
+Copy code
+DB_SERVER=localhost
+DB_NAME=MyDatabase
+DB_USER=sa
+DB_PASS=secret
+DB_DRIVER={ODBC Driver 17 for SQL Server}
+DB_TIMEOUT=30
+DB_LOGIN_TIMEOUT=15
 
-# Start the server
-uvicorn final_mcp:app --reload
-```
+# MCP server options
+MCP_HTTP=1         # 1 = HTTP (default), 0 = STDIO
+MCP_HOST=127.0.0.1 # host for HTTP server
+MCP_PORT=8000      # port for HTTP server
+🚀 Running
+Start the MCP server:
 
----
+bash
+Copy code
+python sql_mcp.py
+Modes
+HTTP (default): server runs at http://127.0.0.1:8000/mcp
 
-## 📝 Requirements
+STDIO: set MCP_HTTP=0 (for clients like Claude Desktop)
 
-The dependencies are listed in `requirements.txt` and include:
+🔧 Available Tools
+Tool	Description
+refresh_schema()	Reloads schema cache (tables, columns, objects, jobs)
+get_table_schema(table)	Returns schema of a given table (columns + types)
+get_column_data(table, select_col, where_col, value)	Sample values from a column with filter
+get_column_population_logic(column)	Find procedures that insert/update a column
+get_object_definition(object)	Returns SQL definition of an object (procedure, view, etc.)
+get_job_status(job)	Returns last run status of a SQL Agent job
 
-* fastapi
-* uvicorn
-* pyodbc
-* python-dotenv
-* pydantic
+📚 Resources
+sql://index — overview of tables and jobs
 
----
+sql://tables — markdown list of all base tables
 
-## 🧠 llms.txt
+sql://jobs — markdown list of SQL Agent jobs
 
-This repository includes a `llms.txt` pointing to the raw `README.md` file so that GitMCP can discover the tool documentation.
+🧩 Example Usage
+python
+Copy code
+from mcp import MCPClient
 
-```
-https://raw.githubusercontent.com/shivam21nit-bit/Sql-Server-MCP/main/README.md
-```
+client = MCPClient("http://127.0.0.1:8000/mcp")
 
----
+# Refresh cache
+client.call("refresh_schema")
 
-## 📄 License
+# Get schema for 'Employees' table
+schema = client.call("get_table_schema", {"table": "Employees"})
+print(schema)
 
-MIT License © 2025 shivam21nit-bit
+# Check job status
+status = client.call("get_job_status", {"job": "Nightly ETL"})
+print(status)
+🗂️ Architecture
+text
+Copy code
++---------------------+        HTTP/STDIO        +----------------------+
+|   MCP-Compatible    | <----------------------> |   SQL MCP Tool        |
+|   Client / Agent    |                          | (FastMCP server)      |
+|   (e.g. Copilot)    |                          |                        |
++---------------------+                          +----------------------+
+                                                        |
+                                                        | pyodbc (ODBC Driver)
+                                                        v
+                                               +----------------------+
+                                               |   SQL Server DB      |
+                                               |  (tables, jobs,      |
+                                               |   procs, views)      |
+                                               +----------------------+
+Client/Agent: Your AI assistant, copilot, or tool that speaks MCP
 
-```
+SQL MCP Tool: This project — exposes DB metadata & jobs via FastMCP
+
+SQL Server: The actual database, queried securely via pyodbc
+
+📦 Deployment Notes
+Recommended to run inside a virtual environment.
+
+For secure remote access, you can tunnel the HTTP server with cloudflared or ngrok.
+
+Use least-privilege DB credentials (read-only if you just need metadata).
+
+📝 License
+MIT License. See LICENSE for details.
+
+📣 Credits
+Built on FastMCP
+
+Uses pyodbc for SQL Server connectivity
